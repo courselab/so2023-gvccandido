@@ -40,6 +40,8 @@ int __attribute__((fastcall, naked)) puts(const char *s)
 	"end:                                                                    \n"
 	"    movb $0x0a, %al         # %al <- \n                                 \n"
 	"    int  $0x10              # call BIOS video service                   \n"
+	"    movb $0x0d, %al         # %al <- \r                                 \n"
+	"    int  $0x10              # call BIOS video service                   \n"
 	"    add  $0x01, %si         # i <- i + 1                                \n"
 	"    mov  %si, %ax           # return i                                  \n"
 	"    ret                                                                 \n"
