@@ -40,3 +40,4 @@ SECTIONS
 	__END_STACK__ = 0x8200; /* 0x7c00 + 512 bytes + 1Kib for stack */
 }
 STARTUP(rt0.o);
+INPUT(stdio.o)
