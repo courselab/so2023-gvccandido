@@ -21,27 +21,33 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-CFLAGS := -Wall -Wextra -pedantic -std=c17 -m16 -O0 -fno-pic -fcf-protection=none -ffreestanding -nostdlib -I.
+CFLAGS := -Wall -Wextra -pedantic -std=c17 -m16 -O0 -fno-pic -fcf-protection=none -ffreestanding -nostdlib
+INCLUDE := -I.
 
-.PHONY: all clean
+.PHONY: all clean purge
 
 all: hw.hex.bin hw.S.bin hw.c.bin
 
-hw.hex.bin : hw.hex
+hw.hex.bin: hw.hex
 	make -C ../tools/
 	../tools/hex2bin $< $@
 
-hw.S.bin : hw.S
+hw.S.bin: hw.S
 	as --32 $< -o $<.o
 	ld -melf_i386 -Ttext=0x7c00 --oformat=binary $<.o -o $@
 	rm $<.o
 
-hw.c.bin : hw.c stdio.o
-	make rt0.o
-	gcc $(CFLAGS) -T hw.ld -Wl,--orphan-handling=discard $^ -o $@
+hw.c.bin: hw.o rt0.o stdio.o
+	gcc $(CFLAGS) $(INCLUDE) -T hw.ld -Wl,--orphan-handling=discard $< -o $@
 
 %.o: %.c
-	gcc $(CFLAGS) -c $< -o $@
+	gcc $(CFLAGS) $(INCLUDE) -c $< -o $@
+
+c_objects := hw.o rt0.o stdio.o
+deps := $(c_objects:%.o=%.d)
+include $(deps)
+%.d: %.c
+	gcc $(INCLUDE) -MM -MT '$(<:%.c=%.o) $@' $< > $@
 
 %/run: %
 	qemu-system-i386 -drive format=raw,file=$< -net none
@@ -59,4 +65,7 @@ hw.c.bin : hw.c stdio.o
 	xorriso -as mkisofs -b $< -o $@ -isohybrid-mbr $< -no-emul-boot -boot-load-size 4 ./
 
 clean:
-	rm -rf *.bin *.o *.iso
+	rm -f *.o *.d
+
+purge: clean
+	rm -f *.bin *.iso
