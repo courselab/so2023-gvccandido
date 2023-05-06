@@ -25,6 +25,17 @@
 #ifndef __STDIO_H__
 #define __STDIO_H__
 
-int __attribute__((fastcall, naked)) puts(const char *s);
+#define VIDEO_MEMORY 0xB8000
+
+#define VIDEO_GRAY_ON_BLACK 0x07
+#define VIDEO_GREEN_ON_BLACK 0x02
+#define VIDEO_BSOD 0x1F
+
+#define SCREEN_COLS (80)
+#define SCREEN_LINES (25)
+#define SCREEN_SIZE (SCREEN_LINES * SCREEN_COLS)
+
+void reset_video(const char mode);
+int puts(const char *s, const char mode);
 
 #endif // __STDIO_H__

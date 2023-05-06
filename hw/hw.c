@@ -26,6 +26,8 @@
 
 int main()
 {
-	puts("Hello x86 bare-metal + assembly + freestanding C world!");
+	reset_video(VIDEO_GRAY_ON_BLACK);
+	puts("Hello ", VIDEO_GRAY_ON_BLACK);
+	puts("Kernel panic...", VIDEO_BSOD);
 	return 0;
 }

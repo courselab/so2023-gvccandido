@@ -24,26 +24,32 @@
 
 #include <stdio.h>
 
-int __attribute__((fastcall, naked)) puts(const char *s)
+// short is considered to be 2 bytes long
+static short *video = (short *) VIDEO_MEMORY;
+
+void __video_print(const char c, const char mode)
 {
-	__asm__(
-	"    mov  %cx, %bx    # bx <- s # only bx can be used on memory accesses \n"
-	"    movb $0x0e, %ah         # %ah <- 0x0e # set BIOS mode to tty        \n"
-	"    movw $0x00, %si         # i <- 0                                    \n"
-	"loop:                                                                   \n"
-	"    movb (%bx, %si), %al    # %al <- s[i]                               \n"
-	"    cmp  $0x00, %al         # if (s[i] == 0)                            \n"
-	"    je   end                #     goto end                              \n"
-	"    int  $0x10              # call BIOS video service                   \n"
-	"    add  $0x01, %si         # i <- i + 1                                \n"
-	"    jmp  loop                                                           \n"
-	"end:                                                                    \n"
-	"    movb $0x0a, %al         # %al <- \n                                 \n"
-	"    int  $0x10              # call BIOS video service                   \n"
-	"    movb $0x0d, %al         # %al <- \r                                 \n"
-	"    int  $0x10              # call BIOS video service                   \n"
-	"    add  $0x01, %si         # i <- i + 1                                \n"
-	"    mov  %si, %ax           # return i                                  \n"
-	"    ret                                                                 \n"
-	);
+	*video = (mode << 8) + c;
+	++video;
+	if (video > VIDEO_MEMORY + (SCREEN_SIZE * 2))
+		video = VIDEO_MEMORY;
+}
+
+void reset_video(const char mode)
+{
+	video = (short *) VIDEO_MEMORY;
+	for (int i = 0; i < SCREEN_SIZE; ++i)
+		video[i] = (mode << 8) + ' ';
+	video = (short *) VIDEO_MEMORY;
+}
+
+int puts(const char *s, const char mode)
+{
+	int i = 0;
+	while (s[i]) {
+		__video_print(s[i], mode);
+		++i;
+	}
+
+	return i;
 }
