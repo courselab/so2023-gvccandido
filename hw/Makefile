@@ -37,7 +37,7 @@ hw.S.bin: hw.S
 	ld -melf_i386 -Ttext=0x7c00 --oformat=binary $<.o -o $@
 	rm $<.o
 
-hw.c.bin: hw.o rt0.o stdio.o
+hw.c.bin: hw.o rt0.o stdio.o hw.ld
 	gcc $(CFLAGS) $(INCLUDE) -T hw.ld -Wl,--orphan-handling=discard $< -o $@
 
 %.o: %.c
