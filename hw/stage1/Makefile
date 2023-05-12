@@ -21,37 +21,47 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 
-.PHONY: all clean purge kernel/kernel.bin
+PROJECT := boot
+OBJECTS := main.o boot.o io.o
+LD_CONFIG := boot.ld
+INCLUDE := .
 
-all: payload.bin
+.PHONY: all clean purge
 
-payload.bin: kernel/kernel.bin
-	STAGE2_SIZE=$(shell expr \( $$(stat --printf="%s" kernel/kernel.bin) - 1 \) / 512 + 1) make -C stage1
-	dd              bs=1440 count=1024        if=/dev/zero         of=$@
-	dd conv=notrunc bs=512  count=1    seek=0 if=stage1/boot.bin   of=$@
-	dd conv=notrunc bs=512             seek=1 if=kernel/kernel.bin of=$@
+CC := gcc
+CFLAGS := -Wall -Wextra -pedantic -std=c17 -m16 -O0 -fno-pic -fcf-protection=none -ffreestanding -nostdlib
+LDFLAGS := -Wl,--orphan-handling=discard
+CPPFLAGS := -I$(INCLUDE)
 
-kernel/kernel.bin:
-	make -C kernel kernel.bin
+all: $(PROJECT).bin
 
-%/run: %
-	qemu-system-i386 -drive format=raw,file=$< -net none
+$(PROJECT).bin: $(OBJECTS) rt0.o $(LD_CONFIG)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -T $(LD_CONFIG) $< -o $@
 
-%/dump: %
-	hexdump -C $<
+%.o: %.c
+ifndef STAGE2_SIZE
+	$(error STAGE2_SIZE not defined)
+endif
+	$(CC) $(CFLAGS) $(CPPFLAGS) -DSTAGE2_SIZE=$(STAGE2_SIZE) -c $< -o $@
+
+rt0.o: rt0.S
+	as --32 $< -o $@
+
+DEPS_FILES := $(OBJECTS:%.o=%.d)
+include $(DEPS_FILES)
+%.d: %.c
+	$(CC) $(CPPFLAGS) -MM -MT '$(<:%.c=%.o) $@' $< > $@
+
+%.o/diss: %.o
+	objdump -M att -d $<
 
 %.bin/diss: %.bin
 	objdump -M att -b binary -m i8086 -D $<
 
-%.iso: %.bin
-	xorriso -as mkisofs -b $< -o $@ -isohybrid-mbr $< -no-emul-boot -boot-load-size 4 ./
-
 clean:
-	make -C stage1 clean
-	make -C kernel clean
-	rm -f *.bin *.iso
+	rm -f *.o *.d
 
 purge: clean
-	make -C stage1 purge
-	make -C kernel purge
+	rm -f *.bin

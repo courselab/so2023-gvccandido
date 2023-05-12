@@ -1,4 +1,4 @@
-/* hw.ld - linker config for x86 bare-metal boot using C
+/* io.c - io implementation for x86 bare-metal booting using C
  
    Copyright (c) 2023, Gabriel V C Candido
 
@@ -6,7 +6,7 @@
    SYSeg is distributed under the license GNU GPL v3, and is available
    at the official repository https://www.gitlab.com/monaco/syseg.
 
-   This file is part of so2023-gvccandido
+   This file is part of so2023-gvccandido.
 
    so2023-gvccandido is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -22,22 +22,28 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-OUTPUT_FORMAT(binary);      /* flat binary */
-SECTIONS
+#include <io.h>
+
+// uses fastcall so the asm can access the argument easily
+void __attribute__((fastcall)) __video_print(const char c)
 {
-	. = 0x7c00;             /* go to 0x7c00 */
-	.text :
-	{
-		*(.text)
-		*(.rodata)
-	}
-	. = 0x7c00 + 510;       /* advance 510 bytes */
-	.signature :
-	{
-		BYTE(0x55)
-		BYTE(0xAA)
-	}
-	__END_STACK__ = 0x8200; /* 0x7c00 + 512 bytes + 1Kib for stack */
+	__asm__(
+	"    movb %cl, %al     # %ax <- c (only the low bits for char matters)   \n"
+	"    movb $0x0E, %ah   # set BIOS video to teletype writing              \n"
+	"    int  $0x10        # call BIOS video service                         \n"
+	);
 }
-STARTUP(rt0.o);
-INPUT(stdio.o)
+
+int puts(const char *s)
+{
+	int i = 0;
+	while (s[i]) {
+		__video_print(s[i]);
+		++i;
+	}
+	__video_print('\r');
+	__video_print('\n');
+	++i;
+
+	return i;
+}

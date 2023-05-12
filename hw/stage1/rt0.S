@@ -1,4 +1,4 @@
-/* hw.c - x86 bare-metal boot using C
+/* rt0.S - runtime0 for x86 bare-metal booting using C
  
    Copyright (c) 2023, Gabriel V C Candido
 
@@ -6,7 +6,7 @@
    SYSeg is distributed under the license GNU GPL v3, and is available
    at the official repository https://www.gitlab.com/monaco/syseg.
 
-   This file is part of so2023-gvccandido
+   This file is part of so2023-gvccandido.
 
    so2023-gvccandido is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -22,12 +22,26 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
+	.code16
+	.global _start
 
-int main()
-{
-	reset_video(VIDEO_GRAY_ON_BLACK);
-	puts("Hello ", VIDEO_GRAY_ON_BLACK);
-	puts("Kernel panic...", VIDEO_BSOD);
-	return 0;
-}
+_start:
+	# initialize segment registers
+	xorw %ax, %ax              # %ax <- 0
+	mov  %ax, %ds
+	mov  %ax, %es
+	mov  %ax, %fs
+	mov  %ax, %gs
+	mov  %ax, %ss
+
+	mov  $__END_STACK__, %sp   # set stack
+
+	jmp $0x0, $__init          # long jumps will set the code segment so it is
+	                           #  also zeroed
+
+__init:
+	call main
+
+__halt:
+	hlt
+	jmp __halt

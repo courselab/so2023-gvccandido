@@ -1,4 +1,4 @@
-/* stdio.h - stdio implementation for x86 bare-metal booting using C
+/* kernel.h - x86 bare-metal booting using C
  
    Copyright (c) 2023, Gabriel V C Candido
 
@@ -22,20 +22,9 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __STDIO_H__
-#define __STDIO_H__
+#ifndef __KERNEL_H__
+#define __KERNEL_H__
 
-#define VIDEO_MEMORY 0xB8000
+void halt();
 
-#define VIDEO_GRAY_ON_BLACK 0x07
-#define VIDEO_GREEN_ON_BLACK 0x02
-#define VIDEO_BSOD 0x1F
-
-#define SCREEN_COLS (80)
-#define SCREEN_LINES (25)
-#define SCREEN_SIZE (SCREEN_LINES * SCREEN_COLS)
-
-void reset_video(const char mode);
-int puts(const char *s, const char mode);
-
-#endif // __STDIO_H__
+#endif // __KERNEL_H__

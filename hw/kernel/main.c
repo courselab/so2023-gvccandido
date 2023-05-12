@@ -1,4 +1,4 @@
-/* rt0.c - runtime0 for x86 bare-metal booting using C
+/* main.c - x86 bare-metal boot using C
  
    Copyright (c) 2023, Gabriel V C Candido
 
@@ -6,7 +6,7 @@
    SYSeg is distributed under the license GNU GPL v3, and is available
    at the official repository https://www.gitlab.com/monaco/syseg.
 
-   This file is part of so2023-gvccandido.
+   This file is part of so2023-gvccandido
 
    so2023-gvccandido is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -22,15 +22,14 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-extern void __END_STACK__; // defined in .ld config
+#include <stdio.h>
+#include <kernel.h>
 
-void __attribute__((naked)) _start()
+int init()
 {
-	__asm__(
-	"    mov $__END_STACK__, %sp    # set stack                              \n"
-	"    call main                                                           \n"
-	"halt:                                                                   \n"
-	"    hlt                                                                 \n"
-	"    jmp halt                                                            \n"
-	);
+	reset_video(VIDEO_GREEN_ON_BLACK);
+	puts("Hello stage2 world!");
+
+	halt();
+	return 0;
 }

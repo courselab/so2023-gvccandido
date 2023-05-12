@@ -1,4 +1,4 @@
-/* stdio.c - stdio implementation for x86 bare-metal booting using C
+/* boot.h - x86 bare-metal booting using C
  
    Copyright (c) 2023, Gabriel V C Candido
 
@@ -22,34 +22,11 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
+#ifndef __BOOT_H__
+#define __BOOT_H__
 
-// short is considered to be 2 bytes long
-static short *video = (short *) VIDEO_MEMORY;
+#define STAGE2_ADDR 0x7E00
 
-void __video_print(const char c, const char mode)
-{
-	*video = (mode << 8) + c;
-	++video;
-	if (video > VIDEO_MEMORY + (SCREEN_SIZE * 2))
-		video = VIDEO_MEMORY;
-}
+void load_stage2();
 
-void reset_video(const char mode)
-{
-	video = (short *) VIDEO_MEMORY;
-	for (int i = 0; i < SCREEN_SIZE; ++i)
-		video[i] = (mode << 8) + ' ';
-	video = (short *) VIDEO_MEMORY;
-}
-
-int puts(const char *s, const char mode)
-{
-	int i = 0;
-	while (s[i]) {
-		__video_print(s[i], mode);
-		++i;
-	}
-
-	return i;
-}
+#endif // __BOOT_H__
