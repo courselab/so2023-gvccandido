@@ -25,7 +25,7 @@
 #include <stdio.h>
 
 // uses fastcall so the asm can access the argument easily
-// TODO stdio putc actuallay returns int
+// TODO stdio putc actually returns int
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 void __attribute__((fastcall)) putc(int c)
