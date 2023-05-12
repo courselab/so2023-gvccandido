@@ -7,7 +7,8 @@ Folder `hw` has the implementation of the first exercise, which comprised 3
 tasks:
   - binary, hexadecimal implementation of hello world (`hw.hex`)
   - assembly implementation of hello world (`hw.S`)
-  - C implementation of hello world, with custom runtime0 and stdio (`*.{c,h,ld}`)
+  - C implementation of hello world, with custom runtime0 and stdio
+    (`*.c`,`*.h`,`*.ld`,`rt0.S`)
 
 ### Running the tasks
   - `make hw.hex.bin/run` will build `hw.hex.bin` and run it on QEMU
@@ -16,3 +17,6 @@ tasks:
 
 Besides the above commands to run each of the specifics tasks, `make` will build
 the 3 binaries from each task, but will not run any of them.
+
+`make clean` and `make purge` removes the objects and also the binaries/images,
+respectively.

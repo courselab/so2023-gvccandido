@@ -21,8 +21,21 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# do not use implicit variables nor rules so the behavior is easier to debug
+MAKEFLAGS += --no-builtin-rules --no-builtin-variables
+
+# for the C implementation and forth (3rd task)
+STDLIB_OBJECTS := stdio.o
+LINK_OBJECTS := hw.o
+OBJECTS := $(STDLIB_OBJECTS) $(LINK_OBJECTS)
+LD_CONFIG := hw.ld
+
+INCLUDE := .
+
+CC := gcc
 CFLAGS := -Wall -Wextra -pedantic -std=c17 -m16 -O0 -fno-pic -fcf-protection=none -ffreestanding -nostdlib
-INCLUDE := -I.
+LDFLAGS := -Wl,--orphan-handling=discard
+CPPFLAGS := -I$(INCLUDE)
 
 .PHONY: all clean purge
 
@@ -37,17 +50,19 @@ hw.S.bin: hw.S
 	ld -melf_i386 -Ttext=0x7c00 --oformat=binary $<.o -o $@
 	rm $<.o
 
-hw.c.bin: hw.o rt0.o stdio.o
-	gcc $(CFLAGS) $(INCLUDE) -T hw.ld -Wl,--orphan-handling=discard $< -o $@
+hw.c.bin: $(OBJECTS) $(LD_CONFIG) rt0.o
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -T $(LD_CONFIG) $(LINK_OBJECTS) -o $@
 
 %.o: %.c
-	gcc $(CFLAGS) $(INCLUDE) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
-c_objects := hw.o rt0.o stdio.o
-deps := $(c_objects:%.o=%.d)
-include $(deps)
+rt0.o: rt0.S
+	as --32 $< -o $@
+
+DEPS_FILES := $(OBJECTS:%.o=%.d)
+include $(DEPS_FILES)
 %.d: %.c
-	gcc $(INCLUDE) -MM -MT '$(<:%.c=%.o) $@' $< > $@
+	$(CC) $(CPPFLAGS) -MM -MT '$(<:%.c=%.o) $@' $< > $@
 
 %/run: %
 	qemu-system-i386 -drive format=raw,file=$< -net none

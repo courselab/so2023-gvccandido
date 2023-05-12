@@ -1,4 +1,4 @@
-/* rt0.c - runtime0 for x86 bare-metal booting using C
+/* rt0.S - runtime0 for x86 bare-metal booting using C
  
    Copyright (c) 2023, Gabriel V C Candido
 
@@ -22,15 +22,26 @@
    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-extern void __END_STACK__; // defined in .ld config
+	.code16
+	.global _start
 
-void __attribute__((naked)) _start()
-{
-	__asm__(
-	"    mov $__END_STACK__, %sp    # set stack                              \n"
-	"    call main                                                           \n"
-	"halt:                                                                   \n"
-	"    hlt                                                                 \n"
-	"    jmp halt                                                            \n"
-	);
-}
+_start:
+	# initialize segment registers
+	xorw %ax, %ax              # %ax <- 0
+	mov  %ax, %ds
+	mov  %ax, %es
+	mov  %ax, %fs
+	mov  %ax, %gs
+	mov  %ax, %ss
+
+	mov  $__END_STACK__, %sp   # set stack
+
+	jmp $0x0, $__init          # long jumps will set the code segment so it is
+	                           #  also zeroed
+
+__init:
+	call main
+
+__halt:
+	hlt
+	jmp __halt

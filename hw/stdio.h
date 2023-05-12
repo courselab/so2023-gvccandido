@@ -25,6 +25,7 @@
 #ifndef __STDIO_H__
 #define __STDIO_H__
 
-int __attribute__((fastcall, naked)) puts(const char *s);
+void __attribute__((fastcall)) putc(int c);
+int puts(const char *s);
 
 #endif // __STDIO_H__

@@ -24,26 +24,30 @@
 
 #include <stdio.h>
 
-int __attribute__((fastcall, naked)) puts(const char *s)
+// uses fastcall so the asm can access the argument easily
+// TODO stdio putc actuallay returns int
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+void __attribute__((fastcall)) putc(int c)
 {
+#pragma GCC diagnostic pop
 	__asm__(
-	"    mov  %cx, %bx    # bx <- s # only bx can be used on memory accesses \n"
-	"    movb $0x0e, %ah         # %ah <- 0x0e # set BIOS mode to tty        \n"
-	"    movw $0x00, %si         # i <- 0                                    \n"
-	"loop:                                                                   \n"
-	"    movb (%bx, %si), %al    # %al <- s[i]                               \n"
-	"    cmp  $0x00, %al         # if (s[i] == 0)                            \n"
-	"    je   end                #     goto end                              \n"
-	"    int  $0x10              # call BIOS video service                   \n"
-	"    add  $0x01, %si         # i <- i + 1                                \n"
-	"    jmp  loop                                                           \n"
-	"end:                                                                    \n"
-	"    movb $0x0a, %al         # %al <- \n                                 \n"
-	"    int  $0x10              # call BIOS video service                   \n"
-	"    movb $0x0d, %al         # %al <- \r                                 \n"
-	"    int  $0x10              # call BIOS video service                   \n"
-	"    add  $0x01, %si         # i <- i + 1                                \n"
-	"    mov  %si, %ax           # return i                                  \n"
-	"    ret                                                                 \n"
+	"    movb %cl, %al     # %ax <- c (only the low bits for char matters)   \n"
+	"    movb $0x0E, %ah   # set BIOS video to teletype writing              \n"
+	"    int  $0x10        # call BIOS video service                         \n"
 	);
+}
+
+int puts(const char *s)
+{
+	int i = 0;
+	while (s[i]) {
+		putc(s[i]);
+		++i;
+	}
+	putc('\r');
+	putc('\n');
+	++i;
+
+	return i;
 }

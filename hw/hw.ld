@@ -25,19 +25,19 @@
 OUTPUT_FORMAT(binary);      /* flat binary */
 SECTIONS
 {
-	. = 0x7c00;             /* go to 0x7c00 */
+	. = 0x7C00;             /* go to 0x7C00 */
 	.text :
 	{
 		*(.text)
 		*(.rodata)
 	}
-	. = 0x7c00 + 510;       /* advance 510 bytes */
+	. = 0x7C00 + 510;       /* advance 510 bytes */
 	.signature :
 	{
 		BYTE(0x55)
 		BYTE(0xAA)
 	}
-	__END_STACK__ = 0x8200; /* 0x7c00 + 512 bytes + 1Kib for stack */
+	__END_STACK__ = 0xFFFF; /* end of 64KiB segment (~32KiB for stack) */
 }
 STARTUP(rt0.o);
 INPUT(stdio.o)
