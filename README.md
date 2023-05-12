@@ -20,3 +20,7 @@ the 3 binaries from each task, but will not run any of them.
 
 `make clean` and `make purge` removes the objects and also the binaries/images,
 respectively.
+
+### Caveats
+The BIOS from my DELL laptop (from ~2014) only booted correctly when using a ISO
+image.
